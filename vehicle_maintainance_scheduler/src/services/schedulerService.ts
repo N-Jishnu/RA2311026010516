@@ -6,9 +6,9 @@ export interface Depot {
 }
 
 export interface VehicleTask {
-  taskId: string;
-  duration: number;
-  impact: number;
+  TaskID: string;
+  Duration: number;
+  Impact: number;
 }
 
 export interface ScheduleResult {
@@ -16,13 +16,6 @@ export interface ScheduleResult {
   totalImpact: number;
   totalDuration: number;
   executionTimeMs?: number;
-}
-
-interface TaskItem {
-  taskId: string;
-  duration: number;
-  impact: number;
-  index: number;
 }
 
 export class SchedulerService {
@@ -98,9 +91,17 @@ export class SchedulerService {
         throw new Error('Failed to fetch depot data');
       }
 
-      const data = await response.json() as { depots?: Depot[] };
+      const data = await response.json() as { depots?: any[] };
       const depots = data.depots || [];
-      const depot = depots.find(d => d.depotId === depotId);
+
+      const normalizedId = depotId.replace('DEPOT', '');
+      const depotIdNum = Number(normalizedId);
+
+      await Log('backend', 'debug', 'service', `incoming depotId=${depotId}, normalized=${depotIdNum}`);
+
+      const depot = depots.find((d: any) => d.ID === depotIdNum);
+
+      await Log('backend', 'debug', 'service', `matched depot=${depot?.ID}`);
 
       await Log('backend', 'info', 'service', `depot API success - found ${depots.length} depots`);
 
@@ -109,8 +110,13 @@ export class SchedulerService {
         throw new Error('Depot not found');
       }
 
-      await Log('backend', 'info', 'service', `depot hours: ${depot.totalMechanicHours}`);
-      return depot.totalMechanicHours;
+      const hours = depot.MechanicHours;
+      if (!hours || hours <= 0) {
+        throw new Error('Invalid mechanic hours');
+      }
+
+      await Log('backend', 'info', 'service', `depot hours: ${hours}`);
+      return hours;
     } catch (error) {
       await Log('backend', 'error', 'service', `depot fetch error: ${error instanceof Error ? error.message : 'Unknown'}`);
       throw error;
@@ -140,10 +146,26 @@ export class SchedulerService {
       }
 
       const data = await response.json() as { vehicles?: VehicleTask[] };
-      const tasks = data.vehicles || [];
+      const tasks = data?.vehicles || [];
 
-      await Log('backend', 'info', 'service', `vehicles API success - found ${tasks.length} tasks`);
-      return tasks;
+      if (!Array.isArray(tasks) || tasks.length === 0) {
+        throw new Error('No tasks available');
+      }
+
+      const normalizedTasks = tasks.map((task) => ({
+        TaskID: String(task.TaskID || ''),
+        Duration: Number(task.Duration),
+        Impact: Number(task.Impact)
+      })).filter((task) => {
+        return Boolean(task.TaskID) && Number.isFinite(task.Duration) && Number.isFinite(task.Impact);
+      });
+
+      if (normalizedTasks.length === 0) {
+        throw new Error('No valid tasks available');
+      }
+
+      await Log('backend', 'info', 'service', `vehicles API success - found ${normalizedTasks.length} valid tasks`);
+      return normalizedTasks;
     } catch (error) {
       await Log('backend', 'error', 'service', `vehicles fetch error: ${error instanceof Error ? error.message : 'Unknown'}`);
       throw error;
@@ -168,8 +190,8 @@ export class SchedulerService {
     );
 
     for (let i = 0; i < n; i++) {
-      const duration = tasks[i].duration;
-      const impact = tasks[i].impact;
+      const duration = tasks[i].Duration;
+      const impact = tasks[i].Impact;
 
       for (let j = capacity; j >= duration; j--) {
         if (dp[j] < dp[j - duration] + impact) {
@@ -179,21 +201,34 @@ export class SchedulerService {
       }
     }
 
-    let j = capacity;
+    let bestImpact = 0;
+    let bestCapacity = 0;
+    for (let j = 0; j <= capacity; j++) {
+      if (dp[j] > bestImpact) {
+        bestImpact = dp[j];
+        bestCapacity = j;
+      }
+    }
+
+    let j = bestCapacity;
     const selectedTasks: VehicleTask[] = [];
 
     for (let i = n - 1; i >= 0; i--) {
       if (keep[i][j]) {
         selectedTasks.push(tasks[i]);
-        j -= tasks[i].duration;
+        j -= tasks[i].Duration;
       }
     }
 
-    const totalImpact = dp[capacity];
-    const totalDuration = selectedTasks.reduce((sum, t) => sum + t.duration, 0);
+    const totalImpact = bestImpact;
+    const totalDuration = selectedTasks.reduce((sum, t) => sum + t.Duration, 0);
 
     if (totalDuration > capacity) {
       throw new Error('Constraint violated');
+    }
+
+    if (selectedTasks.length === 0) {
+      throw new Error('No valid tasks selected');
     }
 
     await Log('backend', 'info', 'service', 'knapsack completed');
@@ -221,13 +256,14 @@ export class SchedulerService {
 
       const tasks = await this.getAllTasks();
 
-      if (!Array.isArray(tasks) || tasks.length === 0) {
-        throw new Error('No tasks available');
-      }
+      await Log('backend', 'debug', 'service', `tasks=${tasks.length}`);
+      await Log('backend', 'debug', 'service', `hours=${hours}`);
 
       await Log('backend', 'debug', 'service', 'knapsack computation start');
 
       const result = await this.solveKnapsack(tasks, hours);
+
+      await Log('backend', 'debug', 'service', `impact=${result.totalImpact}`);
 
       await Log('backend', 'info', 'service', `schedule computed - ${result.selectedTasks.length} tasks selected`);
 

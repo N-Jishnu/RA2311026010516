@@ -24,8 +24,8 @@ function bruteForceKnapsack(tasks: VehicleTask[], capacity: number): ScheduleRes
     for (let i = 0; i < n; i++) {
       if (mask & (1 << i)) {
         const task = tasks[i];
-        totalDur += task.duration;
-        totalImp += task.impact;
+        totalDur += task.Duration;
+        totalImp += task.Impact;
         selected.push(task);
       }
     }
@@ -164,7 +164,7 @@ router.get('/performance', async (req, res) => {
 });
 
 router.get('/memory', async (req, res) => {
-  res.json({ spaceOptimized: false, note: 'Using 2D DP array' });
+  res.json({ spaceOptimized: true, note: 'Using 1D DP with keep matrix for backtracking' });
 });
 
 router.get('/console', async (req, res) => {
@@ -259,8 +259,12 @@ router.get('/all', async (req, res) => {
       throw new Error('No depots found');
     }
 
-    hours = testDepot.totalMechanicHours || testDepot.mechanicHours || 100;
-    const testDepotId = testDepot.depotId || 'DEPOT1';
+    hours = testDepot.MechanicHours;
+    if (!hours || hours <= 0) {
+      throw new Error('Invalid mechanic hours');
+    }
+
+    const testDepotId = testDepot.ID ? `DEPOT${testDepot.ID}` : 'DEPOT1';
     debugInfo += `depot=${testDepotId}, hours=${hours};`;
 
     const vehicleResponse = await fetch('http://20.207.122.201/evaluation-service/vehicles', {
@@ -273,10 +277,10 @@ router.get('/all', async (req, res) => {
     debugInfo += `tasks=${allTasks.length};`;
 
     const taskObjects: VehicleTask[] = allTasks.map((t: any) => ({
-      taskId: t.taskId || t.id,
-      duration: Number(t.Duration || t.duration) || 1,
-      impact: Number(t.Impact || t.impact) || 1
-    }));
+      TaskID: String(t.TaskID || ''),
+      Duration: Number(t.Duration),
+      Impact: Number(t.Impact)
+    })).filter((t) => Boolean(t.TaskID) && Number.isFinite(t.Duration) && Number.isFinite(t.Impact));
 
     const smallTasks = taskObjects.slice(0, 12);
     const result = await schedulerService.solveKnapsack(smallTasks, hours);
