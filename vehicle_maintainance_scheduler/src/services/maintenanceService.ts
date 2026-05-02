@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { MaintenanceLog, CreateMaintenanceDTO } from '../types';
 import { maintenanceRepository } from '../repositories/maintenanceRepository';
 import { vehicleRepository } from '../repositories/vehicleRepository';
-import { Log } from '../../logging_middleware/src/logger';
+import { Log } from '../utils/logger';
 
 export class MaintenanceService {
   async getMaintenanceByVehicleId(vehicleId: string): Promise<MaintenanceLog[]> {

@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Vehicle, CreateVehicleDTO, UpdateVehicleDTO } from '../types';
 import { vehicleRepository } from '../repositories/vehicleRepository';
 import { maintenanceRepository } from '../repositories/maintenanceRepository';
-import { Log } from '../../logging_middleware/src/logger';
+import { Log } from '../utils/logger';
 
 export class VehicleService {
   async getAllVehicles(): Promise<Vehicle[]> {

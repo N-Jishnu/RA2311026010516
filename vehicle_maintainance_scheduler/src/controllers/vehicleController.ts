@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { vehicleService } from '../services/vehicleService';
 import { ApiResponse, CreateVehicleDTO, UpdateVehicleDTO } from '../types';
-import { Log } from '../../logging_middleware/src/logger';
+import { Log } from '../utils/logger';
 
 export class VehicleController {
   async create(req: Request, res: Response): Promise<void> {

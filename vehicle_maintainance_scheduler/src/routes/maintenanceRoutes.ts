@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { maintenanceController } from '../controllers/maintenanceController';
-import { Log } from '../../logging_middleware/src/logger';
+import { Log } from '../utils/logger';
 
 const router = Router();
 

@@ -1,9 +1,9 @@
 import express, { Application } from 'express';
-import { configure as configureLogger } from '../logging_middleware/src/logger';
+import { configure as configureLogger } from './utils/logger';
 import { requestLogger, errorHandler } from './middleware/loggingMiddleware';
 import vehicleRoutes from './routes/vehicleRoutes';
 import maintenanceRoutes from './routes/maintenanceRoutes';
-import { Log } from '../logging_middleware/src/logger';
+import { Log } from './utils/logger';
 import dotenv from 'dotenv';
 
 dotenv.config();

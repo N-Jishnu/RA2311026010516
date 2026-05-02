@@ -53,14 +53,18 @@ async function fetchToken(): Promise<string | null> {
       return null;
     }
 
-    const data = await response.json() as { token?: string; expiresIn?: number };
-    if (!data.token) {
+    const data = await response.json() as { access_token?: string; expires_in?: number };
+    if (!data.access_token) {
       console.error('[Logger] No token in auth response');
       return null;
     }
 
-    cachedToken = data.token;
-    tokenExpiresAt = Date.now() + (data.expiresIn || 3600) * 1000;
+    cachedToken = data.access_token;
+    if (data.expires_in && data.expires_in > 1000000000000) {
+      tokenExpiresAt = data.expires_in;
+    } else {
+      tokenExpiresAt = Date.now() + (data.expires_in || 3600) * 1000;
+    }
     return cachedToken;
   } catch (error) {
     console.error('[Logger] Auth fetch error:', error instanceof Error ? error.message : 'Unknown error');

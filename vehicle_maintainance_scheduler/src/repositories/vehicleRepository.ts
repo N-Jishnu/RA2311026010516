@@ -1,5 +1,5 @@
 import { Vehicle } from '../types';
-import { Log } from '../../logging_middleware/src/logger';
+import { Log } from '../utils/logger';
 
 const vehicles: Map<string, Vehicle> = new Map();
 

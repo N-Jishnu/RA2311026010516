@@ -1,5 +1,5 @@
 import { MaintenanceLog } from '../types';
-import { Log } from '../../logging_middleware/src/logger';
+import { Log } from '../utils/logger';
 
 const maintenanceLogs: Map<string, MaintenanceLog> = new Map();
 

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { maintenanceService } from '../services/maintenanceService';
 import { ApiResponse, CreateMaintenanceDTO } from '../types';
-import { Log } from '../../logging_middleware/src/logger';
+import { Log } from '../utils/logger';
 
 export class MaintenanceController {
   async create(req: Request, res: Response): Promise<void> {
