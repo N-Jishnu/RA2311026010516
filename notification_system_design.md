@@ -1,44 +1,69 @@
-### Components
-1. **Notification Service** - Core service that manages notifications
-2. **Scheduler** - Cron job to check for due vehicles
-3. **Notification Channels** - Email, SMS, Push notifications
-4. **Notification Repository** - Stores notification history
+# Notification System Design
 
+## Stage 1: REST APIs
 
-#### Notification
-- id: string
-- vehicleId: string
-- userId: string
-- type: 'email' | 'sms' | 'push'
-- status: 'pending' | 'sent' | 'failed'
-- scheduledFor: Date
-- sentAt?: Date
-- message: string
+- `GET /notifications` - Fetch notifications
+- `POST /notifications` - Create notification
+- `PATCH /notifications/:id/read` - Mark as read
 
-#### Notification Preference
-- userId: string
-- email: boolean
-- sms: boolean
-- push: boolean
+Real-time: Use Server-Sent Events (SSE)
 
-## API Endpoints
+## Stage 2: Database Schema
 
-### POST /notifications
-Creates a new notification
+```sql
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY,
+  student_id VARCHAR(50),
+  type VARCHAR(20),
+  message TEXT,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP
+);
 
-### GET /notifications/:userId
-Gets notifications for a user
+CREATE INDEX idx_notifications_student_isread ON notifications (student_id, is_read);
+```
 
-### PUT /notifications/:id
-Updates notification status
+## Stage 3: Query Optimization
 
-### DELETE /notifications/:id
-Delete a notification
+Slow query:
+```sql
+SELECT * FROM notifications
+WHERE student_id = ? AND is_read = false
+ORDER BY created_at DESC;
+```
 
-## Implementation Notes
+Fix:
+```sql
+SELECT id, type, message, is_read, created_at
+FROM notifications
+WHERE student_id = ? AND is_read = false
+ORDER BY created_at DESC
+LIMIT 20;
+```
 
-- Use queue system for processing notifications
-- Implement retry mechanism for failed notifications
-- Store notification history for audit purposes
-- Support multiple notification channels
-- Allow users to configure preferences
+Add index:
+```sql
+CREATE INDEX idx_notifications_optimized ON notifications (student_id, is_read, created_at DESC);
+```
+
+## Stage 4: Solutions for DB Overload
+
+- Pagination
+- Redis caching
+- Lazy loading
+- Push-based updates (SSE/WebSockets)
+
+## Stage 5: Queue System
+
+1. Save all notifications to DB first
+2. Push jobs to queue (Bull)
+3. Worker sends emails asynchronously
+4. Failed jobs retry automatically
+
+## Stage 6: Priority Notifications
+
+Formula: `score = weight(type) + recency_factor`
+
+Example weights: Placement=3, Result=2, Event=1
+
+Use Min Heap of size N to get top 10 efficiently.

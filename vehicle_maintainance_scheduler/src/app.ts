@@ -3,6 +3,9 @@ import { configure as configureLogger } from './utils/logger';
 import { requestLogger, errorHandler } from './middleware/loggingMiddleware';
 import vehicleRoutes from './routes/vehicleRoutes';
 import maintenanceRoutes from './routes/maintenanceRoutes';
+import verifyRoutes from './routes/verifyRoutes';
+import schedulerRoutes from './routes/schedulerRoutes';
+import validationRoutes from './routes/validationRoutes';
 import { Log } from './utils/logger';
 import dotenv from 'dotenv';
 
@@ -27,14 +30,24 @@ app.use(requestLogger);
 
 Log('backend', 'info', 'middleware', 'Application starting');
 
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'Vehicle Maintenance Scheduler API is running' });
+});
+
+app.get('/test', (req, res) => {
+  res.json({ success: true, message: 'Test endpoint works' });
+});
+
 app.use('/vehicles', vehicleRoutes);
 app.use('/maintenance', maintenanceRoutes);
+app.use('/verify', verifyRoutes);
+app.use('/schedule', schedulerRoutes);
+app.use('/validation', validationRoutes);
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
   Log('backend', 'info', 'middleware', `Server running on port ${PORT}`);
-  console.log(`Server running on http://localhost:${PORT}`);
 });
 
 export default app;
