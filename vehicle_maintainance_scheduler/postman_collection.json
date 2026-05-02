@@ -1,0 +1,110 @@
+{
+  "info": {
+    "name": "Vehicle Maintenance Scheduler API",
+    "description": "API for managing vehicle maintenance scheduling",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Vehicles",
+      "item": [
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/vehicles",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Toyota Camry\",\n  \"type\": \"car\",\n  \"lastServiceDate\": \"2024-01-01\",\n  \"serviceIntervalDays\": 90\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Vehicles",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/vehicles"
+          }
+        },
+        {
+          "name": "Get Vehicle by ID",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/vehicles/:id"
+          }
+        },
+        {
+          "name": "Update Vehicle",
+          "request": {
+            "method": "PUT",
+            "url": "http://localhost:3000/vehicles/:id",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Toyota Camry Updated\",\n  \"serviceIntervalDays\": 120\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Vehicle",
+          "request": {
+            "method": "DELETE",
+            "url": "http://localhost:3000/vehicles/:id"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maintenance",
+      "item": [
+        {
+          "name": "Add Maintenance Record",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/maintenance",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": \"{{vehicleId}}\",\n  \"serviceDate\": \"2024-04-01\",\n  \"notes\": \"Oil change and tire rotation\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Maintenance History",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/maintenance/:vehicleId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service Due",
+      "item": [
+        {
+          "name": "Get Vehicles Due for Service",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/vehicles/due"
+          }
+        }
+      ]
+    }
+  ]
+}
